@@ -3,7 +3,7 @@
 Este es el guión de la exposición realizada sobre los Sistemas expertos, el video de la exposición se encuentra en [este enlace](https://youtu.be/_iEJMRo_Bpw).
 
 
-## Presnetación e Introducción \[Diapostivia 1\]
+## Presentación e Introducción \[Diapostivia 1\]
 
 > La presentación de la exposición se realiza frente a cámara de cuerpo completo
 
@@ -146,6 +146,9 @@ Sin embargo, a pesar de esta magia perceptiva, las redes neuronales son *cajas n
 
 
 ## Conclusiones finales.
+
+> Las conclusiones finales de la exposición se realizan frente a cámara de cuerpo completo
+
 Para cerrar, la evolución de los Sistemas Expertos demuestra que su arquitectura nunca desapareció, sino que se transformó y adaptó de manera invisible en la tecnología actual, desde la lógica difusa hasta los sistemas transaccionales y ontológicos globales.
 
 Hoy en día, con el auge de la IA neuro-simbólica, queda claro que la estadística por sí sola no es suficiente. La precisión lógica y explicativa de los sistemas expertos sigue siendo una salvaguarda ética y funcional indispensable para el desarrollo de inteligencias artificiales de misión crítica.
