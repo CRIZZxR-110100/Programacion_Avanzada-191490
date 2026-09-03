@@ -1,0 +1,257 @@
+---
+title: "Clasificador Naive Bayes aplicado al conjunto de datos Iris"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introducción
+
+El objetivo de este documento es explicar el fundamento teórico del **Teorema de Bayes**
+y su aplicación práctica a través del clasificador **Naive Bayes**, para después
+implementarlo en R usando el paquete `e1071` sobre el conjunto de datos **Iris**.
+
+# 1. Teorema de Bayes
+
+El Teorema de Bayes permite "invertir" una probabilidad condicional. Es decir, si
+conocemos $P(B \mid A)$, podemos calcular $P(A \mid B)$ mediante:
+
+$$
+P(A \mid B) = \frac{P(A) \cdot P(B \mid A)}{P(B)}
+$$
+
+Esta fórmula se deriva de la definición de probabilidad condicional:
+
+$$
+P(A \mid B) = \frac{P(A \cap B)}{P(B)}, \qquad P(A \cap B) = P(A \mid B) \cdot P(B)
+$$
+
+Este resultado es la base de la clasificación bayesiana: nos permite calcular la
+probabilidad de que un registro pertenezca a una clase $c$, dado que observamos
+ciertas características (evidencia).
+
+# 2. Del Teorema de Bayes al clasificador Naive Bayes
+
+Un **clasificador Naive Bayes** es un método de aprendizaje supervisado que, dado un
+conjunto de características $x_1, x_2, \dots, x_n$, determina cuál es la clase $c$ más
+probable a la que pertenece un registro. Partiendo del Teorema de Bayes:
+
+$$
+P(c \mid x_1, \dots, x_n) = \frac{P(c) \cdot P(x_1, \dots, x_n \mid c)}{P(x_1, \dots, x_n)}
+$$
+
+El término $P(x_1, \dots, x_n \mid c)$ es difícil de estimar directamente, porque
+implicaría conocer la distribución conjunta de todos los atributos. Aquí es donde entra
+el supuesto **"ingenuo" (naive)** de independencia condicional: se asume que, dado el
+valor de la clase, los atributos son independientes entre sí:
+
+$$
+P(x_1, \dots, x_n \mid c) = P(x_1 \mid c) \cdot P(x_2 \mid c) \cdots P(x_n \mid c)
+$$
+
+Sustituyendo:
+
+$$
+P(c \mid x_1, \dots, x_n) = \frac{P(c) \cdot \prod_{i=1}^{n} P(x_i \mid c)}{P(x_1, \dots, x_n)}
+$$
+
+Como el denominador $P(x_1, \dots, x_n)$ es el mismo para todas las clases que se
+comparan (no depende de $c$), no afecta la comparación relativa entre clases y se
+puede eliminar. Esto da la fórmula final que usa el algoritmo:
+
+$$
+P(c \mid x_1, \dots, x_n) \;\propto\; P(c) \cdot \prod_{i=1}^{n} P(x_i \mid c)
+$$
+
+**Algoritmo:**
+
+1. Para cada clase $c_j$, calcular $P(c_j) \cdot \prod_{i=1}^{n} P(x_i \mid c_j)$.
+2. Seleccionar la clase con la mayor probabilidad resultante.
+
+## 2.1 Estimación de probabilidades
+
+- **$P(c)$ (probabilidad a priori):** se estima como la frecuencia relativa de cada
+  clase en el conjunto de entrenamiento: $P(c) = n_c / N$.
+- **$P(x_i \mid c)$ (verosimilitud):**
+  - Si los atributos son **discretos**, se estima contando frecuencias (como en el
+    ejemplo clásico de "jugar" según ambiente, temperatura y viento).
+  - Si los atributos son **continuos** (como en el caso de **Iris**), se supone que
+    cada atributo se distribuye según una **normal**:
+
+$$
+x_i \mid c \sim N\left(\mu_i^c, (\sigma_i^c)^2\right)
+$$
+
+  y se utiliza la función de densidad gaussiana:
+
+$$
+P(x_i \mid c) = \frac{1}{\sqrt{2\pi}\,\sigma_i^c}
+\exp\left(-\frac{(x_i - \mu_i^c)^2}{2(\sigma_i^c)^2}\right)
+$$
+
+Es este segundo caso (atributos continuos con distribución normal) el que aplica
+directamente al conjunto de datos Iris, ya que sus predictores (largo y ancho de sépalo
+y pétalo) son variables numéricas continuas.
+
+## 2.2 Nota sobre el uso de logaritmos
+
+Cuando se multiplican muchas probabilidades (valores entre 0 y 1), el producto puede
+volverse extremadamente pequeño y producir *underflow* numérico. Por ello, en la
+práctica es común aplicar logaritmos:
+
+$$
+\text{Clase predicha} = \arg\max_{c_j}\left[\log P(c_j) + \sum_{i=1}^{n} \log P(x_i \mid c_j)\right]
+$$
+
+El paquete `e1071` maneja estos detalles internamente, por lo que no es necesario
+implementarlos manualmente.
+
+# 3. El conjunto de datos Iris
+
+El dataset `iris`, incluido en R, contiene 150 observaciones de flores del género Iris,
+con 4 atributos numéricos continuos (`Sepal.Length`, `Sepal.Width`, `Petal.Length`,
+`Petal.Width`) y una variable de clase `Species` con tres niveles: *setosa*,
+*versicolor* y *virginica*.
+
+```{r explorar-datos}
+data(iris)
+str(iris)
+summary(iris)
+```
+
+Dado que los predictores son continuos, Naive Bayes estimará, para cada especie, la
+media y desviación estándar de cada atributo, y usará la densidad normal para calcular
+$P(x_i \mid c)$.
+
+# 4. Implementación en R con el paquete `e1071`
+
+## 4.1 Carga de paquetes
+
+```{r cargar-paquetes}
+library(e1071)    # Contiene la función naiveBayes()
+library(caret)    # Para partición de datos y evaluación del modelo
+library(ggplot2)  # Para visualización
+```
+
+## 4.2 División en entrenamiento y prueba
+
+Se utiliza una semilla fija para que la partición sea reproducible, y se separa el
+70% de los datos para entrenamiento y 30% para prueba, manteniendo la proporción de
+clases mediante `createDataPartition`.
+
+```{r particion}
+set.seed(123)
+
+train_index <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+
+train_data <- iris[train_index, ]   # filas de entrenamiento
+test_data  <- iris[-train_index, ]  # filas de prueba
+
+dim(train_data)
+dim(test_data)
+```
+
+## 4.3 Entrenamiento del modelo
+
+La fórmula `Species ~ .` indica que se quiere predecir `Species` usando todas las
+demás variables del data frame como predictores. Internamente, `naiveBayes()`
+calcula, para cada clase, la media y desviación estándar de cada atributo continuo
+(los parámetros de la normal $N(\mu_i^c, (\sigma_i^c)^2)$) y las probabilidades a
+priori $P(c)$.
+
+```{r entrenamiento}
+modelo_nb <- naiveBayes(Species ~ ., data = train_data)
+modelo_nb
+```
+
+## 4.4 Predicciones sobre el conjunto de prueba
+
+```{r predicciones}
+predicciones <- predict(modelo_nb, test_data)
+predicciones
+```
+
+Comparamos las predicciones contra los valores reales:
+
+```{r comparacion}
+test_data$Species
+```
+
+## 4.5 Evaluación del modelo
+
+Usamos una matriz de confusión con `caret::confusionMatrix` para medir el desempeño
+del modelo (exactitud, sensibilidad, especificidad por clase, etc.).
+
+```{r evaluacion}
+matriz_confusion <- confusionMatrix(predicciones, test_data$Species)
+matriz_confusion
+```
+
+## 4.6 Predicción sobre nuevas observaciones
+
+Al igual que en el ejemplo de "jugar" (donde se calculaba $P(c_j \mid x_1,\dots,x_n)$
+para nuevas combinaciones de ambiente, temperatura y viento), aquí calculamos la clase
+más probable para tres nuevas flores hipotéticas, dados sus valores de sépalo y
+pétalo.
+
+```{r nuevos-datos}
+nuevos_datos <- data.frame(
+  Sepal.Length = c(5.1, 6.7, 5.8),
+  Sepal.Width  = c(3.5, 3.0, 2.7),
+  Petal.Length = c(1.4, 5.2, 4.2),
+  Petal.Width  = c(0.2, 2.3, 1.3)
+)
+nuevos_datos
+
+nuevas_predicciones <- predict(modelo_nb, nuevos_datos)
+nuevas_predicciones
+```
+
+También se pueden obtener las probabilidades posteriores $P(c_j \mid x_1,\dots,x_n)$
+para cada clase, en lugar de solo la clase ganadora (equivalente a la tabla de
+probabilidades calculada manualmente en el ejemplo de "jugar", donde se comparaban
+0.085 para *jugar=sí* contra 0.000 para *jugar=no*):
+
+```{r probabilidades}
+probabilidades <- predict(modelo_nb, nuevos_datos, type = "raw")
+probabilidades
+```
+
+## 4.7 Visualización de los datos
+
+Para entender mejor por qué el modelo separa bien las especies, es útil visualizar la
+relación entre dos de los atributos más discriminantes: `Petal.Length` y
+`Petal.Width`.
+
+```{r visualizacion}
+ggplot(iris, aes(x = Petal.Length, y = Petal.Width, color = Species)) +
+  geom_point(size = 2) +
+  labs(
+    title = "Distribución de especies según largo y ancho de pétalo",
+    x = "Largo de pétalo (cm)",
+    y = "Ancho de pétalo (cm)"
+  ) +
+  theme_minimal()
+```
+
+Se observa que las tres especies forman agrupaciones relativamente separadas, lo cual
+explica por qué el supuesto de normalidad por clase que usa Naive Bayes funciona bien
+en este conjunto de datos.
+
+# 5. Conclusiones
+
+El clasificador Naive Bayes aplica directamente el Teorema de Bayes, asumiendo independencia condicional entre los atributos dada la clase.
+Para atributos discretos se estiman frecuencias; para atributos continuos, como los
+de Iris, se asume una distribución normal por clase y atributo.
+El paquete `e1071` en R automatiza el cálculo de las probabilidades a priori, las
+medias y desviaciones estándar por clase, y la predicción final mediante
+`predict()`.
+Sobre el conjunto de datos Iris, el modelo logra una alta exactitud debido a la
+buena separación entre especies, especialmente al usar `Petal.Length` y
+`Petal.Width`.

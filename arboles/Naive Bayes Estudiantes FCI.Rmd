@@ -1,0 +1,214 @@
+---
+title: "Naive Bayes aplicado al rendimiento académico de estudiantes de la FCI"
+
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    theme: readable
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Introducción
+
+Se aplica el clasificador **Naive Bayes** para predecir el
+**Rendimiento** académico de un grupo de estudiantes de la Facultad de Ciencias de
+la Información (FCI), a partir de cuatro variables categóricas: `TiempoEstudio`,
+`Asistencia`, `Participacion` y `SituacionEcon`.
+
+# 1. Fundamento teórico: Teorema de Bayes y Naive Bayes
+
+El Teorema de Bayes permite calcular la probabilidad de una clase $c$ dado un
+conjunto de evidencias (atributos) $x_1, \dots, x_n$:
+
+$$
+P(c \mid x_1, \dots, x_n) = \frac{P(c) \cdot P(x_1, \dots, x_n \mid c)}{P(x_1, \dots, x_n)}
+$$
+
+El clasificador **Naive Bayes** asume independencia condicional entre los
+atributos dado el valor de la clase, de modo que:
+
+$$
+P(x_1, \dots, x_n \mid c) = P(x_1 \mid c) \cdot P(x_2 \mid c) \cdots P(x_n \mid c)
+$$
+
+Como el denominador $P(x_1,\dots,x_n)$ es igual para todas las clases comparadas, la
+clase predicha es la que maximiza:
+
+$$
+P(c \mid x_1, \dots, x_n) \;\propto\; P(c) \cdot \prod_{i=1}^{n} P(x_i \mid c)
+$$
+
+**Estimación de probabilidades:**
+
+- $P(c)$ se estima como la frecuencia relativa de cada clase de `Rendimiento` en el
+  conjunto de entrenamiento: $P(c) = n_c / N$.
+- $P(x_i \mid c)$ se estima contando, dentro de cada clase, la frecuencia relativa de
+  cada categoría del atributo (por ejemplo, $P(\text{Asistencia}=\text{Alta} \mid
+  \text{Rendimiento}=\text{Excelente})$ es la proporción de estudiantes con
+  Rendimiento=Excelente que tuvieron Asistencia=Alta).
+
+
+# 2. Variables del estudio
+
+**Atributos (features):**
+
+- `TiempoEstudio`: Alto (≥15 h/semana), Medio (8-14 h/semana), Bajo (≤7 h/semana)
+- `Asistencia`: Alta (≥90%), Media (75-89%), Baja (≤74%)
+- `Participacion`: Alta (≥80% actividades), Media (50-79%), Baja (≤49%)
+- `SituacionEcon`: Buena, Mala
+
+**Variable objetivo (target):**
+
+- `Rendimiento`: Excelente (≥90 pts), Bueno (80-89 pts), Regular (70-79 pts),
+  Deficiente (≤69 pts)
+
+# 3. Carga de paquetes
+
+```{r cargar-paquetes}
+library(e1071)    # Contiene la función naiveBayes()
+library(caret)    # Para partición de datos y matriz de confusión
+```
+
+# 4. Datos de los estudiantes
+
+Información de 35 estudiantes de la FCI, tabulando su tiempo de
+estudio, asistencia, participación y situación económica, junto con su rendimiento
+académico.
+
+```{r datos}
+estudiantes <- data.frame(
+  TiempoEstudio  = c("Alto","Medio","Bajo","Alto","Medio","Alto","Bajo","Medio","Alto","Bajo",
+                      "Alto","Medio","Bajo","Alto","Medio","Alto","Bajo","Medio","Alto","Bajo",
+                      "Medio","Alto","Bajo","Medio","Alto","Bajo","Medio","Alto","Medio","Bajo",
+                      "Alto","Medio","Bajo","Alto","Medio"),
+  Asistencia     = c("Alta","Media","Baja","Alta","Media","Alta","Baja","Alta","Media","Baja",
+                      "Alta","Media","Media","Media","Baja","Alta","Baja","Alta","Media","Media",
+                      "Media","Alta","Baja","Alta","Media","Baja","Media","Alta","Media","Baja",
+                      "Alta","Media","Baja","Alta","Alta"),
+  Participacion  = c("Alta","Baja","Baja","Media","Media","Alta","Baja","Media","Alta","Media",
+                      "Alta","Baja","Baja","Media","Media","Media","Baja","Alta","Baja","Baja",
+                      "Media","Alta","Media","Media","Alta","Baja","Baja","Media","Alta","Baja",
+                      "Alta","Media","Baja","Media","Alta"),
+  SituacionEcon  = c("Buena","Mala","Mala","Buena","Buena","Buena","Mala","Buena","Buena","Mala",
+                      "Buena","Buena","Mala","Buena","Mala","Buena","Mala","Buena","Buena","Mala",
+                      "Mala","Mala","Buena","Mala","Buena","Buena","Mala","Mala","Buena","Mala",
+                      "Buena","Buena","Mala","Buena","Buena"),
+  Rendimiento    = c("Excelente","Regular","Deficiente","Bueno","Bueno","Excelente","Deficiente","Bueno","Excelente","Regular",
+                      "Excelente","Regular","Deficiente","Bueno","Regular","Excelente","Deficiente","Excelente","Bueno","Regular",
+                      "Regular","Bueno","Regular","Regular","Excelente","Deficiente","Deficiente","Bueno","Bueno","Deficiente",
+                      "Excelente","Bueno","Deficiente","Excelente","Excelente"),
+  stringsAsFactors = TRUE
+)
+
+str(estudiantes)
+```
+
+## 4.1 Exploración inicial
+
+```{r exploracion}
+summary(estudiantes)
+
+# Distribución de la variable objetivo
+table(estudiantes$Rendimiento)
+```
+
+```{r grafico-rendimiento}
+barplot(table(estudiantes$Rendimiento),
+        main = "Distribución de Rendimiento",
+        col = "steelblue",
+        ylab = "Número de estudiantes")
+```
+
+# 5. División en entrenamiento (80%) y prueba (20%)
+
+Se utiliza una semilla fija para reproducibilidad y `createDataPartition` para
+mantener, en la medida de lo posible, la proporción de cada clase de `Rendimiento`
+en ambos conjuntos.
+
+```{r particion}
+set.seed(123)
+
+train_index <- createDataPartition(estudiantes$Rendimiento, p = 0.8, list = FALSE)
+
+train_data <- estudiantes[train_index, ]
+test_data  <- estudiantes[-train_index, ]
+
+dim(train_data)
+dim(test_data)
+
+table(train_data$Rendimiento)
+table(test_data$Rendimiento)
+```
+
+
+# 6. Entrenamiento del modelo Naive Bayes
+
+La fórmula `Rendimiento ~ .` indica que se predice `Rendimiento` usando todas las
+demás variables como predictores. Como todas ellas son categóricas (factores),
+`naiveBayes()` calculará internamente las probabilidades a priori $P(c)$ y las
+tablas de frecuencia condicional $P(x_i \mid c)$ para cada atributo.
+
+```{r entrenamiento}
+modelo_nb <- naiveBayes(Rendimiento ~ ., data = train_data)
+modelo_nb
+```
+
+Nota: en la salida del modelo, `A-priori probabilities` corresponde a $P(c)$ para
+cada clase de `Rendimiento`, y las tablas condicionales que siguen (`TiempoEstudio`,
+`Asistencia`, `Participacion`, `SituacionEcon`) corresponden a $P(x_i \mid c)$.
+
+# 7. Predicciones sobre el conjunto de prueba
+
+```{r predicciones}
+predicciones <- predict(modelo_nb, test_data)
+predicciones
+
+cat("\nValores reales:\n")
+test_data$Rendimiento
+```
+
+# 8. Matriz de confusión
+
+```{r matriz-confusion}
+matriz_confusion <- confusionMatrix(predicciones, test_data$Rendimiento)
+matriz_confusion
+```
+
+La matriz de confusión muestra, en cada celda, cuántos casos reales de una clase
+(filas de "Reference") fueron clasificados por el modelo en cada clase predicha
+(columnas de "Prediction"). La diagonal principal indica los aciertos. El resumen
+incluye además la **Accuracy** (exactitud global) y métricas por clase
+(Sensitivity, Specificity, etc.).
+
+# 9. Predicción de un nuevo estudiante (ejemplo)
+
+Como ejemplo adicional, se predice el rendimiento de un estudiante hipotético con
+tiempo de estudio medio, asistencia alta, participación media y buena situación
+económica.
+
+```{r nuevo-estudiante}
+nuevo_estudiante <- data.frame(
+  TiempoEstudio = factor("Medio", levels = levels(estudiantes$TiempoEstudio)),
+  Asistencia    = factor("Alta",  levels = levels(estudiantes$Asistencia)),
+  Participacion = factor("Media", levels = levels(estudiantes$Participacion)),
+  SituacionEcon = factor("Buena", levels = levels(estudiantes$SituacionEcon))
+)
+
+predict(modelo_nb, nuevo_estudiante)
+
+# Probabilidades posteriores por clase
+predict(modelo_nb, nuevo_estudiante, type = "raw")
+```
+
+# 10. Conclusiones
+
+Naive Bayes con atributos categóricos estima $P(x_i \mid c)$ mediante tablas de
+frecuencia por clase, en lugar de una función de densidad continua.
+La matriz de confusión y la exactitud obtenida dependen fuertemente del tamaño y
+la calidad de la muestra real recolectada; con muestras pequeñas (20-50
+estudiantes) los resultados pueden variar bastante según la partición
+entrenamiento/prueba.
