@@ -14,7 +14,7 @@
 
 Entregar una carpeta dentro del repositorio de GitHub que contenga lo siguiente:
 
-1. Archivo PDF con el resultado de la aplicación de ID3 a iris: **Archivo [Actividad1-191490.pdf](./Actividad1-191490.pdf)**
+1. Archivo PDF con el resultado de la aplicación de ID3 a iris: **Archivo [Reporte ID3 Iris.pdf](<./Reporte ID3 Iris.pdf>)**
 2. Reporte del punto la aplicar el agoritmo J48 a iris en weka: **Archivo [Reporte Weka J48.pdf](<./Reporte Weka J48.pdf>)**
 3. Archivos rmd y html del punto 6:
     * **Archivo RMD [Naive Bayes Iris.Rmd](<./Naive Bayes Iris.Rmd>)**
