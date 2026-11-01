@@ -50,7 +50,7 @@ Evalúan a los docentes, calculan puntajes y devuelven el ranking. Aceptan el pa
 * `GET /api/desasignar?tipo=...&empleado=...&destino=...`: Elimina una asignación.
 * `GET /api/reiniciar`: Restablece las asignaciones iniciales.
 
-## Criterios de Evaluación
+## Criterios de para la asignación de los docentes
 
 1. **Grado:** Doctorado (30 pts), Maestría (20 pts), Licenciatura (10 pts).
 2. **Dominio de cursos:** 1.º en lista (40 pts), 2.º (30 pts), 3.º (20 pts), >=4.º (10 pts), no domina (0 pts).
