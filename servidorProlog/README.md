@@ -1,8 +1,8 @@
-# Actividad 3: Sistema Experto para la Asignación de Profesores (API REST)
+# Actividad 3
+# Servidor Prolog: Sistema Experto para la Asignación de Profesores
 
 **Alumno:**
 Cristóbal Rafael Lara Páez (191490)
-
 **Asignatura:** Programación Avanzada  
 **Docente:** Jesús Alejandro Flores Hernández
 
