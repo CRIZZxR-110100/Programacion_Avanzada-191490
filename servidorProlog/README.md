@@ -14,7 +14,7 @@ Desarrollar un sistema experto en SWI-Prolog con API REST (JSON) para la asignac
 ## Estructura
 
 * **[servidor_fci.pl](./servidor_fci.pl).** Servidor HTTP, controladores de rutas, motor de inferencia y evaluación.
-* **[base_conocimiento.pl](./base_conocimiento.pl).** Hechos dinámicos (`:- dynamic`) de profesores y entidades, con predicados para adición en tiempo de ejecución.
+* **[base_conocimiento.pl](./base_conocimiento.pl).** Hechos dinámicos (`:- dynamic`) de profesores y entidades, con métodos y funciones para la actualización de la base de conocimientos en tiempo de ejecución.
 
 ## Ejecución
 
