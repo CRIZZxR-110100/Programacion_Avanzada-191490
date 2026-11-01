@@ -1,10 +1,6 @@
 :- encoding(utf8).
 
-% ============================================================================
-% Base de Conocimiento Dinamica - FCI UNACAR
-% ============================================================================
-
-% Declaracion dinamica de predicados para permitir insercion y modificacion en tiempo de ejecucion
+% Declaracion dinamica para poder cambiar la base de conocimientos en tiempo de ejecucion
 :- dynamic profesor/5.
 :- dynamic estudios/4.
 :- dynamic acreditacion/3.
@@ -18,10 +14,9 @@
 :- dynamic area_tematica/2.
 :- dynamic asignacion/3.
 
-% ----------------------------------------------------------------------------
+
 % Profesores: profesor(#empleado, nombre, grado, especialidad, cursos_dominados)
 % La lista de cursos esta en orden de prelacion (de mayor a menor dominio).
-% ----------------------------------------------------------------------------
 profesor(101, 'Dr. Roberto Gomez Morales', doctorado, 'Inteligencia Artificial',
          ['Sistemas Expertos', 'Programacion Logica', 'Aprendizaje Automatico', 'Estructuras de Datos']).
 profesor(102, 'Dra. Maria Elena Sanchez Ruiz', doctorado, 'Bases de Datos',
@@ -37,10 +32,9 @@ profesor(106, 'Ing. Fernando Zavala Hernandez', licenciatura, 'Desarrollo Web',
 profesor(107, 'Dra. Gabriela Fuentes Paredes', doctorado, 'Ciencia de Datos',
          ['Aprendizaje Automatico', 'Mineria de Datos', 'Sistemas Expertos', 'Bases de Datos']).
 
-% ----------------------------------------------------------------------------
+
 % Estudios: estudios(#empleado, licenciatura, maestria, doctorado)
 % Cada grado: grado(Titulo, Institucion, Anio) o el atomo 'ninguno'.
-% ----------------------------------------------------------------------------
 estudios(101, grado('Ing. en Computacion', 'UNACAR', 2008),
               grado('Maestria en Ciencias de la Computacion', 'INAOE', 2012),
               grado('Doctorado en Inteligencia Artificial', 'LANIA', 2017)).
@@ -61,9 +55,8 @@ estudios(107, grado('Lic. en Matematicas Aplicadas', 'UNAM', 2010),
               grado('Maestria en Ciencia de Datos', 'ITAM', 2014),
               grado('Doctorado en Ciencias Computacionales', 'CINVESTAV', 2019)).
 
-% ----------------------------------------------------------------------------
+
 % Acreditaciones: acreditacion(#empleado, nombre, tipo) [prodep | sni | certificacion]
-% ----------------------------------------------------------------------------
 acreditacion(101, 'Perfil Deseable PRODEP', prodep).
 acreditacion(101, 'SNII Nivel I', sni).
 acreditacion(102, 'Perfil Deseable PRODEP', prodep).
@@ -79,9 +72,8 @@ acreditacion(106, 'AWS Cloud Practitioner', certificacion).
 acreditacion(107, 'Perfil Deseable PRODEP', prodep).
 acreditacion(107, 'SNII Nivel I', sni).
 
-% ----------------------------------------------------------------------------
+
 % Capacitaciones tomadas: capacitacion_tomada(#empleado, nombre_curso, anio)
-% ----------------------------------------------------------------------------
 capacitacion_tomada(101, 'Redes Neuronales Profundas', 2024).
 capacitacion_tomada(101, 'Docencia Basada en Competencias', 2023).
 capacitacion_tomada(102, 'Big Data con Spark', 2024).
@@ -95,9 +87,8 @@ capacitacion_tomada(106, 'React y Node.js', 2025).
 capacitacion_tomada(107, 'Redes Neuronales Profundas', 2025).
 capacitacion_tomada(107, 'Big Data con Spark', 2023).
 
-% ----------------------------------------------------------------------------
+
 % Cuerpos Academicos: cuerpo_academico(id, nombre, linea_inv, lider, estatus)
-% ----------------------------------------------------------------------------
 cuerpo_academico(ca1, 'Sistemas Inteligentes',
                  'Inteligencia Artificial y Ciencia de Datos', 101, consolidado).
 cuerpo_academico(ca2, 'Ingenieria de Software y Tecnologias Web',
@@ -105,9 +96,8 @@ cuerpo_academico(ca2, 'Ingenieria de Software y Tecnologias Web',
 cuerpo_academico(ca3, 'Redes y Seguridad de la Informacion',
                  'Seguridad en Redes y Sistemas Distribuidos', 104, en_formacion).
 
-% ----------------------------------------------------------------------------
+
 % Academias: academia(id, nombre, materias, lider)
-% ----------------------------------------------------------------------------
 academia(acad_ia, 'Academia de Inteligencia Artificial',
          ['Sistemas Expertos', 'Programacion Logica', 'Aprendizaje Automatico'], 101).
 academia(acad_sw, 'Academia de Ingenieria de Software',
@@ -117,9 +107,8 @@ academia(acad_redes, 'Academia de Redes y Seguridad',
 academia(acad_datos, 'Academia de Bases de Datos',
          ['Bases de Datos', 'Mineria de Datos'], 102).
 
-% ----------------------------------------------------------------------------
+
 % Proyectos: proyecto(id, nombre, objetivo, entregables, lider, integrantes, inicio, fin)
-% ----------------------------------------------------------------------------
 proyecto(p1, 'Tutor Inteligente para Programacion',
          'Desarrollar un sistema experto que guie a estudiantes de programacion',
          ['Prototipo funcional', 'Articulo indexado', 'Manual de usuario'],
@@ -137,9 +126,8 @@ proyecto(p4, 'Prediccion de Desercion Estudiantil',
          ['Modelo predictivo', 'Reporte ejecutivo'],
          102, [102], '2026-04-01', '2026-12-01').
 
-% ----------------------------------------------------------------------------
+
 % Cursos: curso(id, creditos, nombre, objetivo, academia)
-% ----------------------------------------------------------------------------
 curso(c1,  8, 'Sistemas Expertos',      'Construir sistemas basados en conocimiento', acad_ia).
 curso(c2,  6, 'Programacion Logica',    'Resolver problemas con logica de predicados y Prolog', acad_ia).
 curso(c3,  8, 'Aprendizaje Automatico', 'Aplicar modelos de clasificacion y regresion', acad_ia).
@@ -153,9 +141,8 @@ curso(c10, 6, 'Seguridad Informatica',  'Analizar amenazas y aplicar criptografi
 curso(c11, 8, 'Bases de Datos',         'Modelar y consultar bases de datos', acad_datos).
 curso(c12, 6, 'Mineria de Datos',       'Descubrir patrones en grandes volumenes de datos', acad_datos).
 
-% ----------------------------------------------------------------------------
+
 % Cursos de Capacitacion Docente: curso_capacitacion(id, nombre, objetivo, horas, inicio, fin)
-% ----------------------------------------------------------------------------
 curso_capacitacion(cap1, 'IA Generativa para la Docencia',
                    'Usar modelos generativos en la practica docente', 40, '2026-06-15', '2026-06-26').
 curso_capacitacion(cap2, 'Ciberseguridad en la Nube',
@@ -167,17 +154,15 @@ curso_capacitacion(cap4, 'Desarrollo Web Moderno con Frameworks',
 curso_capacitacion(cap5, 'Analitica de Datos con Python',
                    'Aplicar analitica y visualizacion de datos', 25, '2026-08-17', '2026-08-28').
 
-% ----------------------------------------------------------------------------
+
 % Comisiones: comision(id, nombre, descripcion)
-% ----------------------------------------------------------------------------
 comision(com1, 'Comision de Acreditacion CACEI', 'Integrar evidencias para la acreditacion del programa').
 comision(com2, 'Comite de Seguridad Informatica', 'Definir politicas de seguridad de la facultad').
 comision(com3, 'Comite de Laboratorios y Software', 'Administrar laboratorios y software academico').
 comision(com4, 'Comite de Investigacion y Posgrado', 'Evaluar protocolos de investigacion y posgrado').
 
-% ----------------------------------------------------------------------------
+
 % Areas Tematicas para afinidad disciplinar
-% ----------------------------------------------------------------------------
 area_tematica(ia, ['Inteligencia Artificial', 'Sistemas Expertos', 'Programacion Logica',
                    'Aprendizaje Automatico', 'Redes Neuronales Profundas',
                    'IA Generativa para la Docencia', 'acad_ia', ca1, p1, cap1]).
@@ -196,9 +181,8 @@ area_tematica(educacion, ['Docencia Basada en Competencias', 'Evaluacion por Com
                           'Diseno Instruccional y Evaluacion por Competencias', cap3, com1]).
 area_tematica(investigacion, ['Comite de Investigacion y Posgrado', com4]).
 
-% ============================================================================
-% Predicados para manipulacion dinamica de datos
-% ============================================================================
+
+% Metodos para la manipulacion dinamica de la base de conocimiento
 agregar_profesor(Emp, Nom, Grado, Esp, Cursos) :-
     retractall(profesor(Emp, _, _, _, _)),
     assertz(profesor(Emp, Nom, Grado, Esp, Cursos)).

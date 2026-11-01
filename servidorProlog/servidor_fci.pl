@@ -16,18 +16,14 @@
 servidor(Puerto) :- http_server([port(Puerto)]).
 :- initialization(servidor(8080)).
 
-% ----------------------------------------------------------------------------
 % Reglas de Afinidad Tematica
-% ----------------------------------------------------------------------------
 afin(X, Y) :-
     area_tematica(_, L), member(X, L), member(Y, L), !.
 afin(X, Y) :-
     downcase_atom(X, LX), downcase_atom(Y, LY),
     ( sub_atom(LX, _, _, _, LY) ; sub_atom(LY, _, _, _, LX) ), !.
 
-% ----------------------------------------------------------------------------
 % Puntuaciones base
-% ----------------------------------------------------------------------------
 puntos_grado(doctorado, 30).
 puntos_grado(maestria, 20).
 puntos_grado(licenciatura, 10).
@@ -38,9 +34,7 @@ puntos_posicion(3, 20) :- !.
 puntos_posicion(P, 10) :- P >= 4, !.
 puntos_posicion(_, 0).
 
-% ----------------------------------------------------------------------------
 % Evaluadores por tipo de asignacion (Opciones 1 - 5)
-% ----------------------------------------------------------------------------
 
 % Opcion 1: Academias (materias dominadas y especialidad afin)
 evaluar(academia, Emp, IdA, _{empleado: Emp, nombre: Nom, grado: Grado, especialidad: Esp,
@@ -120,9 +114,8 @@ evaluar(comision, Emp, IdCom, _{empleado: Emp, nombre: Nom, grado: Grado, especi
     Total is PtsGrado + PtsEsp,
     ( (PtsEsp > 0 ; Grado \== licenciatura) -> Apto = true ; Apto = false ).
 
-% ----------------------------------------------------------------------------
+
 % Ranking y guardado de asignaciones
-% ----------------------------------------------------------------------------
 rankear(Tipo, Id, Ranking) :-
     findall(P-Res, (profesor(Emp, _, _, _, _), evaluar(Tipo, Emp, Id, Res), P = Res.puntaje), Pares),
     sort(1, @>=, Pares, Ordenados),
@@ -137,9 +130,8 @@ guardar(curso, _, []) :- !.
 guardar(Tipo, Id, Aptos) :-
     forall(member(A, Aptos), agregar_asignacion(Tipo, A.empleado, Id)).
 
-% ----------------------------------------------------------------------------
+
 % Serializacion JSON y armado de expedientes
-% ----------------------------------------------------------------------------
 lider_json(Emp, _{empleado: Emp, nombre: Nom}) :- profesor(Emp, Nom, _, _, _).
 
 asignados(Tipo, Id, L) :-
@@ -201,9 +193,8 @@ coincide_profesor(Q, Emp) :-
     downcase_atom(Nombre, LN),
     sub_atom(LN, _, _, _, LQ).
 
-% ----------------------------------------------------------------------------
+
 % Endpoints HTTP REST
-% ----------------------------------------------------------------------------
 tipos([academia, cuerpo_academico, proyecto, comision, curso, capacitacion]).
 
 % Documentacion de endpoints
@@ -240,9 +231,8 @@ tipos([academia, cuerpo_academico, proyecto, comision, curso, capacitacion]).
 :- http_handler(root(api/agregar/profesor), api_agregar_profesor, []).
 :- http_handler(root(api/agregar/curso), api_agregar_curso, []).
 
-% ----------------------------------------------------------------------------
+
 % Controladores de rutas
-% ----------------------------------------------------------------------------
 api_indice(_Request) :-
     reply_json_dict(_{
         sistema: "Sistema Experto de Asignacion de Profesores - FCI UNACAR",
@@ -365,16 +355,3 @@ api_agregar_curso(Request) :-
     agregar_curso(Id, Cred, Nom, Obj, Acad),
     reply_json_dict(_{mensaje: "Curso agregado exitosamente a la base de conocimiento",
                       id: Id, nombre: Nom, creditos: Cred, academia: Acad}).
-
-% ----------------------------------------------------------------------------
-% Demo rapida en consola: ?- demo.
-% ----------------------------------------------------------------------------
-demo :-
-    forall(member(T-Id, [academia-acad_ia, cuerpo_academico-ca1, proyecto-p1,
-                         curso-c1, capacitacion-cap1, comision-com4]),
-           ( rankear(T, Id, R), include(es_apto, R, A),
-             nombre_destino(T, Id, N),
-             format("~n[~w] ~w~n", [T, N]),
-             forall(member(P, A), format("   ~w  ~w pts~n", [P.nombre, P.puntaje])) )),
-    expediente(101, Exp),
-    format("~n[opcion 6] ~w~n   asignaciones: ~p~n", [Exp.nombre, Exp.asignaciones]).
