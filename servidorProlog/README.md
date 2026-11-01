@@ -23,7 +23,7 @@ Desarrollar un sistema experto en SWI-Prolog con API REST (JSON) para la asignac
    swipl servidor_fci.pl
    ```
 
-## Endpoints de la API
+## *Endpoints*
 
 ### Consultas y Catálogos
 * `GET /api`: Índice de endpoints en formato JSON.
